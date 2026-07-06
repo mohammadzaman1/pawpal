@@ -6,6 +6,28 @@
 
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
+   System should be able to add pet owners and pets, connect owners to their pets. Be able to add/edit taks, mark tasks as completed when they are done. Take contraints like owner preference in time, priotity and types of task. Users should also be able to schedule a task and see today's task.
+
+   Owner
+    Name
+    Age
+    Busy time
+   
+   Pet
+    Name
+    Age
+    Type
+    Breed
+
+   Task
+    Task title
+    Duration
+    Priority
+
+   Scheduler
+    Today Task
+    Task left
+    Completed Task
 
 **b. Design changes**
 
