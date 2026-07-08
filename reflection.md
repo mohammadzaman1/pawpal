@@ -58,11 +58,17 @@
 
 - How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
 - What kinds of prompts or questions were most helpful?
+  I used AI to break the project into phases, check the UML against the code, and refine the scheduler and tests. The most helpful prompts were specific ones about design choices, edge cases, and whether a change still fit the system goals.
+
+   The most useful features were code exploration, refactoring help, and turning vague requirements into concrete classes and methods.
 
 **b. Judgment and verification**
 
 - Describe one moment where you did not accept an AI suggestion as-is.
 - How did you evaluate or verify what the AI suggested?
+  I rejected a suggestion to add full overlap detection because it would have made the scheduler harder to explain and test. I kept the simpler exact-time warning and verified it with tests and a demo run.
+
+   I also kept one scheduler per owner instead of spreading scheduling across multiple objects.
 
 ---
 
@@ -93,3 +99,4 @@
 **c. Key takeaway**
 
 - What is one important thing you learned about designing systems or working with AI on this project?
+  I learned that the lead architect still has to make the final design decisions. AI helps most when it supports the plan instead of replacing it.
