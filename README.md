@@ -52,19 +52,29 @@ Mochi: Litter box cleanup (15 min, priority: medium)
 
 ## 🧪 Testing PawPal+
 
+Run the test suite with:
+
 ```bash
-# Run the full test suite:
-pytest
-
-# Run with coverage:
-pytest --cov
+python -m pytest
 ```
 
-Sample test output:
+These tests cover task sorting, recurring task completion, conflict detection, and a basic empty-schedule edge case.
 
+Successful test run:
+
+```text
+============================= test session starts ==============================
+platform darwin -- Python 3.12.5, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/ashik/Codes/Codepath_AI/pawpal
+plugins: anyio-4.14.1
+collected 7 items
+
+tests/test_pawpal.py .......                                             [100%]
+
+============================== 7 passed in 0.01s ===============================
 ```
-# Paste your pytest output here
-```
+
+Confidence Level: 5/5 stars
 
 ## 📐 Smarter Scheduling
 

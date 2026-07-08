@@ -38,6 +38,15 @@ def test_scheduler_sort_by_time_orders_hh_mm_strings() -> None:
 	assert ordered == [morning, evening, unscheduled]
 
 
+def test_scheduler_handles_owner_with_no_tasks() -> None:
+	owner = Owner(name="Jordan")
+	pet = Pet(name="Mochi")
+
+	owner.add_pet(pet)
+
+	assert owner.scheduler.get_today_tasks() == []
+
+
 def test_scheduler_filter_tasks_by_completion_and_pet_name() -> None:
 	owner = Owner(name="Jordan")
 	mochi = Pet(name="Mochi")
