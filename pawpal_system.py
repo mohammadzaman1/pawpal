@@ -43,6 +43,7 @@ class Task:
 		recurrence: str | None = None,
 		recurrence_interval_days: int | None = None,
 	) -> None:
+		"""Update the task details in place."""
 		if title is not None:
 			self.title = title
 		if duration_minutes is not None:
@@ -58,6 +59,7 @@ class Task:
 			self.recurrence_interval_days = 0
 
 	def mark_completed(self, completed_on: date | None = None) -> None:
+		"""Mark the task complete and advance recurring tasks."""
 		completion_date = completed_on or date.today()
 		self.completed = True
 
@@ -65,6 +67,10 @@ class Task:
 		if interval_days > 0:
 			self.next_due_date = completion_date + timedelta(days=interval_days)
 			self.completed = False
+
+	def mark_complete(self, completed_on: date | None = None) -> None:
+		"""Alias for mark_completed()."""
+		self.mark_completed(completed_on=completed_on)
 
 
 @dataclass
@@ -77,12 +83,14 @@ class Pet:
 	tasks: list[Task] = field(default_factory=list)
 
 	def update_info(self, name: str, age: int, species: str, breed: str) -> None:
+		"""Replace the stored pet profile details."""
 		self.name = name
 		self.age = age
 		self.species = species
 		self.breed = breed
 
 	def add_task(self, task: Task) -> None:
+		"""Attach a task to this pet and set its pet ID."""
 		task.pet_id = self.pet_id
 		if all(existing.task_id != task.task_id for existing in self.tasks):
 			self.tasks.append(task)
@@ -96,12 +104,14 @@ class Scheduler:
 	completed_tasks: list[Task] = field(default_factory=list)
 
 	def _find_task(self, task_id: str) -> Task | None:
+		"""Return the task with the matching ID if it exists."""
 		for task in self.all_tasks:
 			if task.task_id == task_id:
 				return task
 		return None
 
 	def _sync_owner_tasks(self, owner: Owner) -> None:
+		"""Pull in tasks from all pets owned by the given owner."""
 		for pet in owner.pets:
 			for task in pet.tasks:
 				if task.pet_id != pet.pet_id:
@@ -110,6 +120,7 @@ class Scheduler:
 					self.all_tasks.append(task)
 
 	def _refresh_views(self, reference_date: date | None = None) -> None:
+		"""Rebuild the scheduler's cached task views."""
 		today = reference_date or date.today()
 		due_tasks = [
 			task
@@ -129,6 +140,7 @@ class Scheduler:
 		self.completed_tasks = [task for task in self.all_tasks if task.completed]
 
 	def add_task(self, task: Task) -> None:
+		"""Add a task to the scheduler and refresh cached views."""
 		if all(existing.task_id != task.task_id for existing in self.all_tasks):
 			self.all_tasks.append(task)
 		self._refresh_views()
@@ -142,6 +154,7 @@ class Scheduler:
 		recurrence: str | None = None,
 		recurrence_interval_days: int | None = None,
 	) -> None:
+		"""Edit an existing task by ID."""
 		task = self._find_task(task_id)
 		if task is None:
 			raise ValueError(f"Task not found: {task_id}")
@@ -155,6 +168,7 @@ class Scheduler:
 		self._refresh_views()
 
 	def schedule_tasks(self, owner: Owner, available_minutes: int | None = None) -> list[Task]:
+		"""Choose the highest-priority tasks that fit in the available time."""
 		self._sync_owner_tasks(owner)
 		today = date.today()
 		due_tasks = [
@@ -185,6 +199,7 @@ class Scheduler:
 		return selected
 
 	def get_today_tasks(self, pet_id: str | None = None) -> list[Task]:
+		"""Return today's tasks, optionally filtered by pet."""
 		if not self.today_tasks:
 			self._refresh_views()
 
@@ -193,6 +208,7 @@ class Scheduler:
 		return [task for task in self.today_tasks if task.pet_id == pet_id]
 
 	def mark_task_completed(self, task_id: str) -> None:
+		"""Mark the task with the given ID as completed."""
 		task = self._find_task(task_id)
 		if task is None:
 			raise ValueError(f"Task not found: {task_id}")
@@ -209,10 +225,12 @@ class Owner:
 	pets: list[Pet] = field(default_factory=list)
 
 	def add_pet(self, pet: Pet) -> None:
+		"""Add a pet to the owner and sync its tasks to the scheduler."""
 		if all(existing.pet_id != pet.pet_id for existing in self.pets):
 			self.pets.append(pet)
 		for task in pet.tasks:
 			self.scheduler.add_task(task)
 
 	def update_busy_time(self, busy_time: str) -> None:
+		"""Update the owner's busy-time note."""
 		self.busy_time = busy_time
