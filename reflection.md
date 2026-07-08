@@ -8,23 +8,23 @@
 - What classes did you include, and what responsibilities did you assign to each?
    System should be able to add pet owners and pets, connect owners to their pets. Be able to add/edit taks, mark tasks as completed when they are done. Take contraints like owner preference in time, priotity and types of task. Users should also be able to schedule a task and see today's task.
 
-   Owner
+   Owner: The person a oet belongs to.
     Name
     Age
     Busy time
    
-   Pet
+   Pet: Pet that the tasks needs to be done on by the owner.
     Name
     Age
     Type
     Breed
 
-   Task
+   Task: Individual tasks that needs to be done.
     Task title
     Duration
     Priority
 
-   Scheduler
+   Scheduler: Holds all the tasks and keeps track of them.
     Today Task
     Task left
     Completed Task
@@ -33,7 +33,7 @@
 
 - Did your design change during implementation?
 - If yes, describe at least one change and why you made it.
-
+Yes, Now there will only be one shceduler per owner regardless of the quanity of the pets they own.
 ---
 
 ## 2. Scheduling Logic and Tradeoffs

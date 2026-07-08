@@ -3,40 +3,50 @@ classDiagram
         +string name
         +int age
         +string busyTime
+        +Scheduler scheduler
         +addPet(pet: Pet) void
         +updateBusyTime(busyTime: string) void
     }
 
     class Pet {
+        +string petId
         +string name
         +int age
-        +string type
+        +string species
         +string breed
-        +updateInfo(name: string, age: int, type: string, breed: string) void
+        +Task[] tasks
+        +updateInfo(name: string, age: int, species: string, breed: string) void
+        +addTask(task: Task) void
     }
 
     class Task {
+        +string taskId
+        +string petId
         +string title
         +int durationMinutes
         +string priority
+        +string recurrence
+        +int recurrenceIntervalDays
+        +date nextDueDate
         +bool completed
-        +editTask(title: string, durationMinutes: int, priority: string) void
-        +markCompleted() void
+        +editTask(title?, durationMinutes?, priority?, recurrence?, recurrenceIntervalDays?) void
+        +markCompleted(completedOn?) void
     }
 
     class Scheduler {
+        +Task[] allTasks
         +Task[] todayTasks
         +Task[] tasksLeft
         +Task[] completedTasks
         +addTask(task: Task) void
-        +editTask(task: Task) void
-        +scheduleTasks(owner: Owner, pet: Pet) Task[]
-        +getTodayTasks() Task[]
-        +markTaskCompleted(task: Task) void
+        +editTask(taskId: string, title?, durationMinutes?, priority?, recurrence?, recurrenceIntervalDays?) void
+        +scheduleTasks(owner: Owner, availableMinutes?) Task[]
+        +getTodayTasks(petId?) Task[]
+        +markTaskCompleted(taskId: string) void
     }
 
     Owner "1" o-- "0..*" Pet : owns
+    Owner "1" *-- "1" Scheduler : has
     Pet "1" o-- "0..*" Task : needs
     Scheduler --> Owner : uses constraints from
-    Scheduler --> Pet : builds plan for
     Scheduler --> Task : schedules
