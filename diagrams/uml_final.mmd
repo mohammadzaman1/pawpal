@@ -1,0 +1,64 @@
+classDiagram
+    class Owner {
+        +string name
+        +int age
+        +string busy_time
+        +Scheduler scheduler
+        +Pet[] pets
+        +add_pet(pet: Pet) void
+        +update_busy_time(busy_time: string) void
+    }
+
+    class Pet {
+        +string pet_id
+        +string name
+        +int age
+        +string species
+        +string breed
+        +Task[] tasks
+        +update_info(name: string, age: int, species: string, breed: string) void
+        +add_task(task: Task) void
+    }
+
+    class Task {
+        +string task_id
+        +string pet_id
+        +string title
+        +string time
+        +int duration_minutes
+        +string priority
+        +string recurrence
+        +int recurrence_interval_days
+        +date? next_due_date
+        +bool completed
+        -_next_occurrence(completed_on: date) Task?
+        +edit_task(title?, time?, duration_minutes?, priority?, recurrence?, recurrence_interval_days?) void
+        +mark_completed(completed_on?) Task?
+        +mark_complete(completed_on?) Task?
+    }
+
+    class Scheduler {
+        +Task[] all_tasks
+        +Task[] today_tasks
+        +Task[] tasks_left
+        +Task[] completed_tasks
+        +sort_by_time(tasks?) Task[]
+        +filter_tasks(owner?, completed?, pet_name?, tasks?) Task[]
+        +detect_time_conflicts(owner?, tasks?) string[]
+        +add_task(task: Task) void
+        +edit_task(task_id: string, title?, duration_minutes?, priority?, recurrence?, recurrence_interval_days?) void
+        +schedule_tasks(owner: Owner, available_minutes?) Task[]
+        +get_today_tasks(pet_id?) Task[]
+        +mark_task_completed(task_id: string) void
+        -_find_task(task_id: string) Task?
+        -_sync_owner_tasks(owner: Owner) void
+        -_refresh_views(reference_date?) void
+    }
+
+    Owner "1" o-- "0..*" Pet : owns
+    Owner "1" *-- "1" Scheduler : has
+    Pet "1" o-- "0..*" Task : has
+    Scheduler o-- "0..*" Task : tracks
+    Scheduler ..> Owner : uses
+    Scheduler ..> Pet : syncs tasks from
+    Task ..> Task : creates next occurrence

@@ -76,25 +76,51 @@ tests/test_pawpal.py .......                                             [100%]
 
 Confidence Level: 5/5 stars
 
-## 📐 Smarter Scheduling
+## Features
 
-| Feature           | Method(s)                                          | Notes                                                                           |
-| ----------------- | -------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Task sorting      | `Scheduler.sort_by_time()`                         | Sorts tasks by `HH:MM` strings and keeps unscheduled tasks last.                |
-| Filtering         | `Scheduler.filter_tasks()`                         | Filters by completion status, pet name, or both using the current owner roster. |
-| Conflict handling | `Scheduler.detect_time_conflicts()`                | Returns warning messages for exact time collisions instead of crashing.         |
-| Recurring tasks   | `Task.mark_completed()`, `Task._next_occurrence()` | Creates the next daily, weekly, or custom recurring instance after completion.  |
+- Time-based sorting with `Scheduler.sort_by_time()`, which orders tasks by `HH:MM` and keeps unscheduled tasks at the end.
+- Priority-aware scheduling with `Scheduler.schedule_tasks()`, which fills the day by choosing high-priority tasks first and skipping tasks that do not fit in the available time.
+- Filtering with `Scheduler.filter_tasks()`, which can narrow results by completion status, pet name, or both.
+- Conflict warnings with `Scheduler.detect_time_conflicts()`, which groups tasks by exact time and reports collisions instead of raising an error.
+- Recurring task completion with `Task.mark_completed()` and `Task._next_occurrence()`, which create the next daily, weekly, or custom repeat instance when a task is completed.
+- Cached schedule views with `Scheduler.today_tasks`, `Scheduler.tasks_left`, and `Scheduler.completed_tasks`, which stay in sync after scheduling, editing, and completion updates.
 
-The scheduler currently uses lightweight rules that are easy to explain and test. It sorts with a simple time key, filters with linear scans, warns on exact time matches, and advances recurring tasks by creating a fresh next instance.
+## Demo Walkthrough
 
-## 📸 Demo Walkthrough
+1. Start on the Streamlit page and enter basic owner information, then add one or more pets with names, ages, species, and breeds.
+2. Use the task form to assign care work to a specific pet. Each task captures a title, optional time, duration, and priority.
+3. Click **Generate schedule** to build a plan for the day based on the available minutes you enter.
+4. Review the schedule table to see tasks sorted by time, plus any leftover tasks that did not fit in the time budget.
+5. Watch for conflict warnings when two tasks share the same time, and use the pet filter to focus on one animal’s schedule.
 
-Describe your app in numbered steps so a reader can follow along without watching a video:
+The example workflow is: add a pet, add a task, generate the schedule, and then review the results and warnings.
 
-1. <!-- Describe this step -->
-2. <!-- Describe this step -->
-3. <!-- Describe this step -->
-4. <!-- Describe this step -->
-5. <!-- Add more steps as needed -->
+The main UI lets a user add pets, create tasks, choose a time budget, and inspect each pet’s task list alongside today’s schedule. It also shows completion counts and conflict warnings so the user can quickly understand how the plan was assembled.
 
-**Screenshot or video** _(optional)_: <!-- Insert a screenshot or link to a demo video here -->
+Key scheduler behaviors shown in the app include sorting tasks by time, filtering tasks by pet or completion state, warning about exact time conflicts, and carrying recurring tasks forward after completion.
+
+Sample CLI output from running `main.py`:
+
+```text
+Tasks sorted by time
+----------------------
+07:30 | Mochi: Morning feeding
+09:00 | Mochi: Brush coat
+09:00 | Biscuit: Vet follow-up
+15:00 | Biscuit: Afternoon walk
+18:00 | Mochi: Litter box cleanup
+
+Completed tasks
+----------------
+Biscuit: Vet follow-up
+
+Mochi tasks
+------------
+Litter box cleanup (18:00)
+Morning feeding (07:30)
+Brush coat (09:00)
+
+Schedule warnings
+-----------------
+Warning: 2 tasks are scheduled at 09:00 -> Mochi: Brush coat, Biscuit: Vet follow-up
+```

@@ -1,6 +1,6 @@
 import streamlit as st
 
-from pawpal_system import Owner, Pet, Scheduler, Task
+from pawpal_system import Owner, Pet, Task
 
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
@@ -74,6 +74,7 @@ selected_pet = next((pet for pet in owner.pets if pet.name == selected_pet_name)
 
 with st.form("add_task_form", clear_on_submit=True):
     task_title = st.text_input("Task title", value="Morning walk")
+    task_time = st.text_input("Time (HH:MM, optional)", value="")
     duration = st.number_input("Duration (minutes)", min_value=1, max_value=240, value=20)
     priority = st.selectbox("Priority", ["low", "medium", "high"], index=2)
     add_task_submitted = st.form_submit_button("Add Task")
@@ -82,7 +83,12 @@ if add_task_submitted:
     if selected_pet is None:
         st.error("Add a pet first, then assign the task to that pet.")
     else:
-        new_task = Task(title=task_title, duration_minutes=int(duration), priority=priority)
+        new_task = Task(
+            title=task_title,
+            time=task_time.strip(),
+            duration_minutes=int(duration),
+            priority=priority,
+        )
         selected_pet.add_task(new_task)
         owner.scheduler.add_task(new_task)
         st.success(f"Added {new_task.title} to {selected_pet.name}.")
@@ -92,14 +98,16 @@ if owner.pets:
     for pet in owner.pets:
         st.markdown(f"**{pet.name}** ({pet.species}, age {pet.age})")
         if pet.tasks:
+            sorted_pet_tasks = owner.scheduler.sort_by_time(pet.tasks)
             st.table(
                 [
                     {
                         "title": task.title,
+                        "time": task.time or "Any time",
                         "duration_minutes": task.duration_minutes,
                         "priority": task.priority,
                     }
-                    for task in pet.tasks
+                    for task in sorted_pet_tasks
                 ]
             )
         else:
@@ -121,9 +129,59 @@ if st.button("Generate schedule"):
     )
 
 if st.session_state["generated_schedule"]:
+    pet_lookup = {pet.pet_id: pet.name for pet in owner.pets}
+    sorted_schedule = owner.scheduler.sort_by_time(st.session_state["generated_schedule"])
+    conflicts = owner.scheduler.detect_time_conflicts(owner=owner, tasks=sorted_schedule)
+
+    total_minutes = sum(task.duration_minutes for task in sorted_schedule)
+    st.success(f"Scheduled {len(sorted_schedule)} task(s) totaling {total_minutes} minutes.")
+
+    filter_options = ["All pets"] + [pet.name for pet in owner.pets]
+    selected_filter = st.selectbox("Filter schedule by pet", filter_options)
+
+    displayed_schedule = sorted_schedule
+    if selected_filter != "All pets":
+        displayed_schedule = owner.scheduler.filter_tasks(
+            owner=owner,
+            pet_name=selected_filter,
+            tasks=sorted_schedule,
+        )
+
     st.write("Today's Schedule")
-    for task in st.session_state["generated_schedule"]:
-        pet_name = next((pet.name for pet in owner.pets if pet.pet_id == task.pet_id), "Unknown pet")
-        st.write(f"{pet_name}: {task.title} ({task.duration_minutes} min, priority: {task.priority})")
+    st.table(
+        [
+            {
+                "pet": pet_lookup.get(task.pet_id, "Unknown pet"),
+                "title": task.title,
+                "time": task.time or "Any time",
+                "duration_minutes": task.duration_minutes,
+                "priority": task.priority,
+            }
+            for task in displayed_schedule
+        ]
+    )
+
+    if owner.scheduler.tasks_left:
+        st.warning(f"{len(owner.scheduler.tasks_left)} task(s) were not scheduled within available time.")
+        st.table(
+            [
+                {
+                    "pet": pet_lookup.get(task.pet_id, "Unknown pet"),
+                    "title": task.title,
+                    "time": task.time or "Any time",
+                    "duration_minutes": task.duration_minutes,
+                    "priority": task.priority,
+                }
+                for task in owner.scheduler.sort_by_time(owner.scheduler.tasks_left)
+            ]
+        )
+
+    if conflicts:
+        for warning in conflicts:
+            st.warning(warning)
+
+    completed_tasks = owner.scheduler.filter_tasks(owner=owner, completed=True)
+    pending_tasks = owner.scheduler.filter_tasks(owner=owner, completed=False)
+    st.caption(f"Task status: {len(pending_tasks)} pending, {len(completed_tasks)} completed.")
 else:
     st.info("Generate a schedule to see today's tasks.")
