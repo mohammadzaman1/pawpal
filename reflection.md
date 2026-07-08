@@ -6,34 +6,35 @@
 
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
-   System should be able to add pet owners and pets, connect owners to their pets. Be able to add/edit taks, mark tasks as completed when they are done. Take contraints like owner preference in time, priotity and types of task. Users should also be able to schedule a task and see today's task.
+  System should be able to add pet owners and pets, connect owners to their pets. Be able to add/edit taks, mark tasks as completed when they are done. Take contraints like owner preference in time, priotity and types of task. Users should also be able to schedule a task and see today's task.
 
    Owner: The person a oet belongs to.
-    Name
-    Age
-    Busy time
-   
+   Name
+   Age
+   Busy time
+
    Pet: Pet that the tasks needs to be done on by the owner.
-    Name
-    Age
-    Type
-    Breed
+   Name
+   Age
+   Type
+   Breed
 
    Task: Individual tasks that needs to be done.
-    Task title
-    Duration
-    Priority
+   Task title
+   Duration
+   Priority
 
    Scheduler: Holds all the tasks and keeps track of them.
-    Today Task
-    Task left
-    Completed Task
+   Today Task
+   Task left
+   Completed Task
 
 **b. Design changes**
 
 - Did your design change during implementation?
 - If yes, describe at least one change and why you made it.
-Yes, Now there will only be one shceduler per owner regardless of the quanity of the pets they own.
+  Yes, Now there will only be one shceduler per owner regardless of the quanity of the pets they own.
+
 ---
 
 ## 2. Scheduling Logic and Tradeoffs
@@ -47,6 +48,7 @@ Yes, Now there will only be one shceduler per owner regardless of the quanity of
 
 - Describe one tradeoff your scheduler makes.
 - Why is that tradeoff reasonable for this scenario?
+  My scheduler uses a lightweight conflict check that only flags exact HH:MM matches instead of trying to detect overlapping task durations. That tradeoff keeps the code easy to read and fast enough for a small pet-care planner, even though it will miss some more complex time conflicts.
 
 ---
 

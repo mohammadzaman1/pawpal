@@ -44,8 +44,6 @@ pip install -r requirements.txt
 
 ## 🖥️ Sample Output
 
-
-
 ```
 Mochi: Morning feeding (10 min, priority: high)
 Biscuit: Afternoon walk (30 min, priority: high)
@@ -70,14 +68,14 @@ Sample test output:
 
 ## 📐 Smarter Scheduling
 
-> Fill in once you've implemented scheduling logic.
+| Feature           | Method(s)                                          | Notes                                                                           |
+| ----------------- | -------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Task sorting      | `Scheduler.sort_by_time()`                         | Sorts tasks by `HH:MM` strings and keeps unscheduled tasks last.                |
+| Filtering         | `Scheduler.filter_tasks()`                         | Filters by completion status, pet name, or both using the current owner roster. |
+| Conflict handling | `Scheduler.detect_time_conflicts()`                | Returns warning messages for exact time collisions instead of crashing.         |
+| Recurring tasks   | `Task.mark_completed()`, `Task._next_occurrence()` | Creates the next daily, weekly, or custom recurring instance after completion.  |
 
-| Feature | Method(s) | Notes |
-|---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+The scheduler currently uses lightweight rules that are easy to explain and test. It sorts with a simple time key, filters with linear scans, warns on exact time matches, and advances recurring tasks by creating a fresh next instance.
 
 ## 📸 Demo Walkthrough
 
@@ -89,4 +87,4 @@ Describe your app in numbered steps so a reader can follow along without watchin
 4. <!-- Describe this step -->
 5. <!-- Add more steps as needed -->
 
-**Screenshot or video** *(optional)*: <!-- Insert a screenshot or link to a demo video here -->
+**Screenshot or video** _(optional)_: <!-- Insert a screenshot or link to a demo video here -->

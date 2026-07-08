@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import date, timedelta
+from collections import defaultdict
 from uuid import uuid4
 
 
@@ -28,6 +29,7 @@ class Task:
 	task_id: str = field(default_factory=lambda: str(uuid4()))
 	pet_id: str = ""
 	title: str = ""
+	time: str = ""
 	duration_minutes: int = 0
 	priority: str = "medium"
 	recurrence: str = "none"
@@ -35,9 +37,27 @@ class Task:
 	next_due_date: date | None = None
 	completed: bool = False
 
+	def _next_occurrence(self, completed_on: date) -> Task | None:
+		"""Create the next scheduled instance for daily, weekly, or custom recurring tasks."""
+		interval_days = _recurrence_days(self.recurrence, self.recurrence_interval_days)
+		if interval_days <= 0:
+			return None
+
+		return Task(
+			pet_id=self.pet_id,
+			title=self.title,
+			time=self.time,
+			duration_minutes=self.duration_minutes,
+			priority=self.priority,
+			recurrence=self.recurrence,
+			recurrence_interval_days=self.recurrence_interval_days,
+			next_due_date=completed_on + timedelta(days=interval_days),
+		)
+
 	def edit_task(
 		self,
 		title: str | None = None,
+		time: str | None = None,
 		duration_minutes: int | None = None,
 		priority: str | None = None,
 		recurrence: str | None = None,
@@ -46,6 +66,8 @@ class Task:
 		"""Update the task details in place."""
 		if title is not None:
 			self.title = title
+		if time is not None:
+			self.time = time
 		if duration_minutes is not None:
 			self.duration_minutes = duration_minutes
 		if priority is not None:
@@ -58,19 +80,16 @@ class Task:
 		if self.recurrence.lower() == "none":
 			self.recurrence_interval_days = 0
 
-	def mark_completed(self, completed_on: date | None = None) -> None:
-		"""Mark the task complete and advance recurring tasks."""
+	def mark_completed(self, completed_on: date | None = None) -> Task | None:
+		"""Mark the task complete and return the next occurrence if the task repeats."""
 		completion_date = completed_on or date.today()
 		self.completed = True
 
-		interval_days = _recurrence_days(self.recurrence, self.recurrence_interval_days)
-		if interval_days > 0:
-			self.next_due_date = completion_date + timedelta(days=interval_days)
-			self.completed = False
+		return self._next_occurrence(completion_date)
 
-	def mark_complete(self, completed_on: date | None = None) -> None:
-		"""Alias for mark_completed()."""
-		self.mark_completed(completed_on=completed_on)
+	def mark_complete(self, completed_on: date | None = None) -> Task | None:
+		"""Backward-compatible alias for mark_completed()."""
+		return self.mark_completed(completed_on=completed_on)
 
 
 @dataclass
@@ -102,6 +121,60 @@ class Scheduler:
 	today_tasks: list[Task] = field(default_factory=list)
 	tasks_left: list[Task] = field(default_factory=list)
 	completed_tasks: list[Task] = field(default_factory=list)
+
+	def sort_by_time(self, tasks: list[Task] | None = None) -> list[Task]:
+		"""Return tasks sorted by HH:MM strings, with unscheduled tasks placed last."""
+		task_list = list(tasks if tasks is not None else self.all_tasks)
+		return sorted(task_list, key=lambda task: task.time or "99:99")
+
+	def filter_tasks(
+		self,
+		owner: Owner | None = None,
+		completed: bool | None = None,
+		pet_name: str | None = None,
+		tasks: list[Task] | None = None,
+	) -> list[Task]:
+		"""Filter tasks by completion status, pet name, or both using simple linear scans."""
+		task_list = list(tasks if tasks is not None else self.all_tasks)
+		pet_lookup = {pet.pet_id: pet.name for pet in owner.pets} if owner is not None else {}
+
+		filtered_tasks: list[Task] = []
+		for task in task_list:
+			if completed is not None and task.completed is not completed:
+				continue
+			if pet_name is not None:
+				owner_pet_name = pet_lookup.get(task.pet_id, "")
+				if owner_pet_name.lower() != pet_name.lower():
+					continue
+			filtered_tasks.append(task)
+
+		return filtered_tasks
+
+	def detect_time_conflicts(
+		self,
+		owner: Owner | None = None,
+		tasks: list[Task] | None = None,
+	) -> list[str]:
+		"""Return warning strings for exact HH:MM collisions instead of raising errors."""
+		task_list = list(tasks if tasks is not None else self.all_tasks)
+		pet_lookup = {pet.pet_id: pet.name for pet in owner.pets} if owner is not None else {}
+		tasks_by_time: dict[str, list[Task]] = defaultdict(list)
+
+		for task in task_list:
+			if not task.time:
+				continue
+			tasks_by_time[task.time].append(task)
+
+		warnings: list[str] = []
+		for time, time_tasks in sorted(tasks_by_time.items()):
+			if len(time_tasks) < 2:
+				continue
+
+			pet_names = [pet_lookup.get(task.pet_id, "Unknown pet") for task in time_tasks]
+			joined_tasks = ", ".join(f"{pet_name}: {task.title}" for pet_name, task in zip(pet_names, time_tasks))
+			warnings.append(f"Warning: {len(time_tasks)} tasks are scheduled at {time} -> {joined_tasks}")
+
+		return warnings
 
 	def _find_task(self, task_id: str) -> Task | None:
 		"""Return the task with the matching ID if it exists."""
@@ -212,7 +285,9 @@ class Scheduler:
 		task = self._find_task(task_id)
 		if task is None:
 			raise ValueError(f"Task not found: {task_id}")
-		task.mark_completed()
+		next_task = task.mark_completed()
+		if next_task is not None:
+			self.all_tasks.append(next_task)
 		self._refresh_views()
 
 
